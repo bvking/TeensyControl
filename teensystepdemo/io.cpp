@@ -1,6 +1,20 @@
 #include "io.h"
 #include <TeensyStep.h>
 
+void initIo() {
+  pinMode(LED, OUTPUT);
+  initSteppersPins();
+  initEncoders();
+}
+
+void toggleLed() {
+  static bool ledState = LOW;
+  ledState = !ledState;
+  digitalWrite(LED, ledState);
+}
+
+// STEPPER
+
 #define NBSTEPSPERTURN 6400
 #define MAXSPEED 6400  // Max 300 000
 #define ACCEL 40000    // Max 500 000
@@ -39,14 +53,14 @@ void initSteppers() {
     setStep(i,0);
     setGoal(i, NBSTEPSPERTURN);
   }
-//  moveMotors();
+  moveMotors();
   for(uint8_t i=0; i < NBMOTORS; i++) {
     int32_t val =(zeroPos[i] + offsets[i]) % NBSTEPSPERTURN;
     if(val < NBSTEPSPERTURN / 2)
       val += NBSTEPSPERTURN;
     setGoal(i,val);
   }
- // moveMotors();
+  moveMotors();
   for(uint8_t i=0; i < NBMOTORS; i++) {
     setStep(i,0);
     setGoal(i,0);
@@ -80,8 +94,6 @@ void moveMotors() {
     //stepperMotors[i].moveTo(goal[i]); // AccelStepper
   }
   controller.move(stepperMotors[0], stepperMotors[1], stepperMotors[2], stepperMotors[3], stepperMotors[4], stepperMotors[5]);
-  //controller.move(stepperMotors);
-
 }
 
 void moveMotorsAsync() {
@@ -90,7 +102,6 @@ void moveMotorsAsync() {
     stepperMotors[i].setTargetAbs(goal[i]);
     //stepperMotors[i].moveTo(goal[i]); // AccelStepper
   }
-  //controller.moveAsync(stepperMotors);
   controller.moveAsync(stepperMotors[0], stepperMotors[1], stepperMotors[2], stepperMotors[3], stepperMotors[4], stepperMotors[5]);
 }
 
@@ -120,7 +131,9 @@ int32_t getStep(uint8_t motorNumber) {
   // return stepperMotors[motorNumber].currentPosition(); // accelStepper
 }
 
+
 // Encodeurs
+
 volatile int32_t count[NBMOTORS] = { 0, 0, 0, 0, 0, 0 };          //Comptage des tics d'encodeur qui est incrémenté à chaque interruption
 volatile int16_t rotationSpeed[NBMOTORS] = { 0, 0, 0, 0, 0, 0 };  //Vitesse de rotation extraite de la variable count
 volatile bool laststateA[NBMOTORS] = { 0, 0, 0, 0, 0, 0 };        //Etat précédent des sorties A des enncodeurs
@@ -222,18 +235,6 @@ int32_t getCount(uint8_t motorId) {
 
 void setCount(uint8_t motorId, int32_t val) {
   count[motorId] = val;
-}
-
-void toggleLed() {
-  static bool ledState = LOW;
-  ledState = !ledState;
-  digitalWrite(LED, ledState);
-}
-
-void initIo() {
-  pinMode(LED, OUTPUT);
-  initSteppersPins();
-  initEncoders();
 }
 
 void displayAllCountSerial1() {
